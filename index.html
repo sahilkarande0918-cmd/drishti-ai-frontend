@@ -476,14 +476,109 @@ function stopCam(){
   camOn=false;clearInterval(autoT);
 }
 
-const DEMOS=[['Stop Sign','traffic',.94],['Speed Limit 50','traffic',.88],['₹100 Note','currency',.91],['No Entry','traffic',.96],['School Zone','traffic',.87],['₹500 Note','currency',.93]];
-let ai=0;
+const API='https://sahilkarande918-drishti-ai.hf.space';
+const COOLDOWN_MS=12000;
+const lastDetected={};
+let detecting=false,speaking=false,bboxClearTimer=null;
+
+function drawBoxes(dets){
+  const cv=document.getElementById('bbox-canvas');
+  if(!cv)return;
+  const vp=cv.parentElement;
+  cv.width=vp.offsetWidth;cv.height=vp.offsetHeight;
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const sx=cv.width/640,sy=cv.height/640;
+  dets.forEach(d=>{
+    if(!d.bbox||d.bbox.length<4)return;
+    const[x1,y1,x2,y2]=d.bbox;
+    const rx=x1*sx,ry=y1*sy,rw=(x2-x1)*sx,rh=(y2-y1)*sy;
+    if(rw<10||rh<10)return;
+    const col=d.model==='traffic'?'rgba(79,70,229,0.95)':'rgba(5,150,105,0.95)';
+    ctx.fillStyle=d.model==='traffic'?'rgba(79,70,229,0.07)':'rgba(5,150,105,0.07)';
+    ctx.fillRect(rx,ry,rw,rh);
+    ctx.strokeStyle=col;ctx.lineWidth=2;ctx.strokeRect(rx,ry,rw,rh);
+    const cs=Math.min(14,rw*0.2,rh*0.2);ctx.lineWidth=3;
+    [[rx,ry,1,1],[rx+rw,ry,-1,1],[rx,ry+rh,1,-1],[rx+rw,ry+rh,-1,-1]].forEach(([cx2,cy2,dx,dy])=>{
+      ctx.beginPath();ctx.moveTo(cx2+dx*cs,cy2);ctx.lineTo(cx2,cy2);ctx.lineTo(cx2,cy2+dy*cs);ctx.stroke();
+    });
+    const lt=d.label+' '+Math.round(d.confidence*100)+'%';
+    ctx.font='bold 11px Outfit,sans-serif';
+    const tw=ctx.measureText(lt).width;
+    const lx=Math.max(0,rx),ly=ry>=22?ry-22:ry+rh+2;
+    ctx.fillStyle=col;ctx.fillRect(lx,ly,tw+12,20);
+    ctx.fillStyle='#fff';ctx.fillText(lt,lx+6,ly+14);
+  });
+  clearTimeout(bboxClearTimer);
+  bboxClearTimer=setTimeout(()=>{
+    const c=document.getElementById('bbox-canvas');
+    if(c)c.getContext('2d').clearRect(0,0,c.width,c.height);
+  },2000);
+}
+
+function pickBest(dets){
+  const MIN={traffic:0.55,currency:0.65};
+  const f=dets.filter(d=>d.confidence>=(MIN[d.model]||0.55));
+  return f.length?f.reduce((a,b)=>a.confidence>b.confidence?a:b):null;
+}
+
+async function detectFromCamera(){
+  if(!camOn||detecting||speaking)return;
+  const vid=document.getElementById('cvid');
+  if(!vid||!vid.videoWidth)return;
+  detecting=true;
+  const cap=document.createElement('canvas');
+  cap.width=640;cap.height=640;
+  cap.getContext('2d').drawImage(vid,0,0,640,640);
+  cap.toBlob(async(blob)=>{
+    if(!blob){detecting=false;return;}
+    const fd=new FormData();fd.append('file',blob,'frame.jpg');
+    try{
+      const res=await fetch(API+'/detect/both',{method:'POST',body:fd,signal:AbortSignal.timeout(5000)});
+      if(!res.ok){detecting=false;return;}
+      const data=await res.json();
+      if(data.success&&data.detections&&data.detections.length>0){
+        drawBoxes(data.detections);
+        const best=pickBest(data.detections);
+        if(best){
+          const now=Date.now();
+          if(!lastDetected[best.label]||(now-lastDetected[best.label])>COOLDOWN_MS){
+            lastDetected[best.label]=now;
+            speaking=true;
+            const pct=Math.round(best.confidence*100);
+            const text=TR[lang][best.label]||best.label;
+            const pop=document.getElementById('dpop');
+            pop.textContent=best.label+' · '+pct+'%';
+            pop.classList.add('show');
+            setTimeout(()=>pop.classList.remove('show'),3000);
+            addLog(best.label,best.model,pct,text);
+            setVBox(text);
+            speakDone(text);
+          }
+        }
+      }
+    }catch(e){if(e.name!=='AbortError')console.log(e.message);}
+    detecting=false;
+  },'image/jpeg',0.75);
+}
+
+function speakDone(text){
+  if(muted){speaking=false;return;}
+  if(!window.speechSynthesis){speaking=false;return;}
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.rate=spd;
+  u.lang=lang==='hi'?'hi-IN':lang==='mr'?'mr-IN':'en-IN';
+  const voices=speechSynthesis.getVoices();
+  let v=voices.find(x=>x.lang===u.lang)||voices.find(x=>x.lang.startsWith(lang))||voices.find(x=>x.lang.startsWith('en'));
+  if(v)u.voice=v;
+  u.onend=()=>{speaking=false;};
+  u.onerror=()=>{speaking=false;};
+  setTimeout(()=>speechSynthesis.speak(u),80);
+}
+
 function startAuto(){
-  autoT=setInterval(()=>{
-    if(!camOn)return;
-    const d=DEMOS[ai++%DEMOS.length];
-    sim(d[0],d[1],d[2]+(Math.random()*.06-.03));
-  },4500);
+  autoT=setInterval(()=>{if(!camOn)return;detectFromCamera();},1000);
 }
 
 /* ── SIMULATE DETECTION ── */
@@ -542,26 +637,8 @@ if(window.speechSynthesis){
 }
 
 function speak(text){
-  if(muted||!window.speechSynthesis)return;
-  speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(text);
-  u.rate=spd;
-  // Correct BCP-47 codes
-  const lmap={en:'en-IN',hi:'hi-IN',mr:'mr-IN'};
-  u.lang=lmap[lang]||'en-IN';
-  // Pick best matching voice
-  const voices=speechSynthesis.getVoices();
-  if(voices.length>0){
-    // 1. Exact lang match
-    let v=voices.find(x=>x.lang===u.lang);
-    // 2. Language prefix (hi, mr, en)
-    if(!v){const prefix=lang==='hi'?'hi':lang==='mr'?'mr':'en';v=voices.find(x=>x.lang.startsWith(prefix));}
-    // 3. Any Indian English as fallback
-    if(!v)v=voices.find(x=>x.lang.startsWith('en-IN')||x.lang.startsWith('en'));
-    if(v)u.voice=v;
-  }
-  // Small delay prevents some browser cancellation bugs
-  setTimeout(()=>speechSynthesis.speak(u),80);
+  speaking=true;
+  speakDone(text);
 }
 </script>
 </body>
