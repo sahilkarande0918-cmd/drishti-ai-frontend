@@ -685,7 +685,7 @@ function drawBoxes(dets){
 }
 
 function pickBest(dets){
-  const MIN={traffic:0.55,currency:0.65};
+  const MIN={traffic:0.55,currency:0.78};
   const f=dets.filter(d=>d.confidence>=(MIN[d.model]||0.55));
   return f.length?f.reduce((a,b)=>a.confidence>b.confidence?a:b):null;
 }
