@@ -161,6 +161,64 @@ footer{position:relative;z-index:1;text-align:center;padding:2.4rem 3rem;border-
   .fgrid{grid-template-columns:1fr}
   .dlayout{grid-template-columns:1fr}
 }
+
+/* ── ARCHITECTURE 3D ── */
+#arch{position:relative;z-index:1;padding:7rem 3rem;max-width:1140px;margin:0 auto}
+.arch-pipeline{display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:nowrap;overflow-x:auto;padding:2rem 0 3rem;perspective:1000px}
+.arch-node{display:flex;flex-direction:column;align-items:center;gap:.6rem;flex-shrink:0;cursor:pointer}
+.arch-card{
+  width:110px;height:110px;border-radius:20px;
+  background:var(--bg2);border:1px solid var(--border2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;
+  box-shadow:0 4px 16px rgba(0,0,0,.07),0 1px 3px rgba(0,0,0,.05);
+  transition:transform .4s cubic-bezier(.175,.885,.32,1.275),box-shadow .4s;
+  transform-style:preserve-3d;position:relative;
+}
+.arch-node:hover .arch-card{
+  transform:translateY(-8px) rotateX(8deg) rotateY(-4deg) scale(1.05);
+  box-shadow:0 20px 48px rgba(79,70,229,.15),0 8px 16px rgba(0,0,0,.08);
+  border-color:rgba(79,70,229,.3);
+}
+.arch-num{
+  position:absolute;top:-10px;right:-10px;
+  width:22px;height:22px;border-radius:50%;
+  background:var(--text);color:var(--bg2);
+  font-size:.65rem;font-weight:600;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+.arch-emoji{font-size:1.8rem;line-height:1}
+.arch-card-label{font-size:.68rem;font-weight:600;color:var(--text);text-align:center;padding:0 .4rem}
+.arch-card-sub{font-size:.58rem;color:var(--text3);text-align:center;padding:0 .4rem;line-height:1.3}
+.arch-node-label{font-size:.72rem;color:var(--text2);text-align:center;max-width:100px;line-height:1.4;font-weight:500}
+.arch-arrow{display:flex;align-items:center;padding:0 .3rem;flex-shrink:0;margin-bottom:2.5rem}
+.arch-arrow svg{opacity:.2;transition:opacity .3s}
+.arch-pipeline:hover .arch-arrow svg{opacity:.4}
+.arch-split{display:flex;flex-direction:column;gap:.6rem;align-items:center;flex-shrink:0}
+.arch-split-label{font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);font-weight:500}
+.arch-mini-cards{display:flex;flex-direction:column;gap:.45rem}
+.arch-mini{
+  display:flex;align-items:center;gap:.5rem;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:10px;padding:.45rem .75rem;
+  box-shadow:var(--sh);
+  transition:transform .3s,border-color .3s;
+  font-size:.72rem;font-weight:500;color:var(--text);
+}
+.arch-mini:hover{transform:translateX(4px);border-color:rgba(79,70,229,.3);}
+.arch-mini span:first-child{font-size:1rem}
+.arch-badges{display:flex;gap:.4rem;justify-content:center;flex-wrap:wrap;margin-top:3rem}
+.arch-badge{
+  display:inline-flex;align-items:center;gap:.4rem;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:100px;padding:.3rem .85rem;
+  font-size:.73rem;color:var(--text2);
+  box-shadow:var(--sh);
+  transition:transform .2s,border-color .2s;
+}
+.arch-badge:hover{transform:translateY(-2px);border-color:rgba(79,70,229,.25);}
+.arch-badge-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
 </style>
 </head>
 <body>
@@ -176,7 +234,7 @@ footer{position:relative;z-index:1;text-align:center;padding:2.4rem 3rem;border-
     <div class="nlinks">
       <a href="#hero">Home</a>
       <a href="#features">Features</a>
-      <a href="#demo">Demo</a>
+      <a href="#arch">Architecture</a><a href="#demo">Demo</a>
     </div>
     <a href="#demo" class="nbtn">Try Now →</a>
   </div>
@@ -217,6 +275,106 @@ footer{position:relative;z-index:1;text-align:center;padding:2.4rem 3rem;border-
 </section>
 
 <div class="hr"></div>
+
+<!-- ARCHITECTURE -->
+<section id="arch">
+  <p class="stag">How It Was Built</p>
+  <h2 class="sh2">System Architecture</h2>
+  <p class="sp">Every layer of Drishti AI — from raw image to spoken word — built from scratch using open-source tools.</p>
+
+  <div class="arch-pipeline">
+
+    <!-- Step 1 -->
+    <div class="arch-node">
+      <div class="arch-card">
+        <div class="arch-num">1</div>
+        <div class="arch-emoji">📷</div>
+        <div class="arch-card-label">Camera</div>
+        <div class="arch-card-sub">WebRTC Live</div>
+      </div>
+      <div class="arch-node-label">Browser webcam captures frames every 1s</div>
+    </div>
+
+    <div class="arch-arrow"><svg width="32" height="14" viewBox="0 0 32 14"><path d="M0 7h28M23 2l5 5-5 5" stroke="var(--text)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+    <!-- Step 2 -->
+    <div class="arch-node">
+      <div class="arch-card">
+        <div class="arch-num">2</div>
+        <div class="arch-emoji">🖼</div>
+        <div class="arch-card-label">Preprocess</div>
+        <div class="arch-card-sub">640×640 JPEG</div>
+      </div>
+      <div class="arch-node-label">Canvas resize + JPEG encode at 75% quality</div>
+    </div>
+
+    <div class="arch-arrow"><svg width="32" height="14" viewBox="0 0 32 14"><path d="M0 7h28M23 2l5 5-5 5" stroke="var(--text)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+    <!-- Step 3 -->
+    <div class="arch-node">
+      <div class="arch-card">
+        <div class="arch-num">3</div>
+        <div class="arch-emoji">🌐</div>
+        <div class="arch-card-label">FastAPI</div>
+        <div class="arch-card-sub">HF Space</div>
+      </div>
+      <div class="arch-node-label">POST /detect/both receives frame</div>
+    </div>
+
+    <div class="arch-arrow"><svg width="32" height="14" viewBox="0 0 32 14"><path d="M0 7h28M23 2l5 5-5 5" stroke="var(--text)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+    <!-- Step 4 — Split models -->
+    <div class="arch-split">
+      <div class="arch-split-label">Parallel Inference</div>
+      <div class="arch-mini-cards">
+        <div class="arch-mini"><span>🚦</span> YOLOv8s Traffic — 56 classes</div>
+        <div class="arch-mini"><span>💵</span> YOLOv8s Currency — 6 classes</div>
+      </div>
+      <div class="arch-node-label" style="font-size:.65rem">RTX 5050 · CUDA 12.8 · 3.9ms/frame</div>
+    </div>
+
+    <div class="arch-arrow"><svg width="32" height="14" viewBox="0 0 32 14"><path d="M0 7h28M23 2l5 5-5 5" stroke="var(--text)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+    <!-- Step 5 -->
+    <div class="arch-node">
+      <div class="arch-card">
+        <div class="arch-num">5</div>
+        <div class="arch-emoji">📦</div>
+        <div class="arch-card-label">Filter</div>
+        <div class="arch-card-sub">NMS + Conf</div>
+      </div>
+      <div class="arch-node-label">Traffic >55% · Currency >78% confidence</div>
+    </div>
+
+    <div class="arch-arrow"><svg width="32" height="14" viewBox="0 0 32 14"><path d="M0 7h28M23 2l5 5-5 5" stroke="var(--text)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+
+    <!-- Step 6 -->
+    <div class="arch-node">
+      <div class="arch-card">
+        <div class="arch-num">6</div>
+        <div class="arch-emoji">🔊</div>
+        <div class="arch-card-label">Voice TTS</div>
+        <div class="arch-card-sub">EN / HI / MR</div>
+      </div>
+      <div class="arch-node-label">Web Speech API + AI4Bharat Marathi TTS</div>
+    </div>
+
+  </div>
+
+  <!-- Tech badges -->
+  <div class="arch-badges">
+    <div class="arch-badge"><div class="arch-badge-dot" style="background:#4f46e5"></div>Python 3.13</div>
+    <div class="arch-badge"><div class="arch-badge-dot" style="background:#059669"></div>YOLOv8s · Ultralytics 8.4</div>
+    <div class="arch-badge"><div class="arch-badge-dot" style="background:#d97706"></div>PyTorch 2.10 + CUDA 12.8</div>
+    <div class="arch-badge"><div class="arch-badge-dot" style="background:#0891b2"></div>FastAPI + Uvicorn</div>
+    <div class="arch-badge"><div class="arch-badge-dot" style="background:#7c3aed"></div>Hugging Face Spaces</div>
+    <div class="arch-badge"><div class="arch-badge-dot" style="background:#dc2626"></div>RTX 5050 · 8GB VRAM</div>
+    <div class="arch-badge"><div class="arch-badge-dot" style="background:#059669"></div>Roboflow Dataset</div>
+    <div class="arch-badge"><div class="arch-badge-dot" style="background:#0891b2"></div>AI4Bharat Indic TTS</div>
+    <div class="arch-badge"><div class="arch-badge-dot" style="background:#1a1916"></div>Vercel Frontend</div>
+    <div class="arch-badge"><div class="arch-badge-dot" style="background:#4f46e5"></div>mAP50: 0.945 Traffic · 0.908 Currency</div>
+  </div>
+</section>
 
 <!-- DEMO -->
 <section id="demo">
