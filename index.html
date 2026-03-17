@@ -566,13 +566,47 @@ async function detectFromCamera(){
 
 function speakDone(text){
   if(muted){speaking=false;return;}
+  if(lang==='mr'){
+    speakMarathi(text);
+    return;
+  }
   if(!window.speechSynthesis){speaking=false;return;}
   speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(text);
   u.rate=spd;
-  u.lang=lang==='hi'?'hi-IN':lang==='mr'?'mr-IN':'en-IN';
+  u.lang=lang==='hi'?'hi-IN':'en-IN';
   const voices=speechSynthesis.getVoices();
   let v=voices.find(x=>x.lang===u.lang)||voices.find(x=>x.lang.startsWith(lang))||voices.find(x=>x.lang.startsWith('en'));
+  if(v)u.voice=v;
+  u.onend=()=>{speaking=false;};
+  u.onerror=()=>{speaking=false;};
+  setTimeout(()=>speechSynthesis.speak(u),80);
+}
+
+function speakMarathi(text){
+  const api='https://sahilkarande918-drishti-ai.hf.space/tts/marathi?text='+encodeURIComponent(text);
+  fetch(api)
+    .then(r=>{if(!r.ok)throw new Error('TTS failed');return r.blob();})
+    .then(blob=>{
+      const url=URL.createObjectURL(blob);
+      const audio=new Audio(url);
+      audio.playbackRate=spd;
+      audio.onended=()=>{speaking=false;URL.revokeObjectURL(url);};
+      audio.onerror=()=>{speaking=false;speakMrFallback(text);};
+      audio.play().catch(()=>{speaking=false;speakMrFallback(text);});
+    })
+    .catch(()=>speakMrFallback(text));
+}
+
+function speakMrFallback(text){
+  if(!window.speechSynthesis){speaking=false;return;}
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.rate=spd;u.lang='mr-IN';
+  const voices=speechSynthesis.getVoices();
+  const v=voices.find(x=>x.lang.startsWith('mr'))
+    ||voices.find(x=>x.lang.startsWith('hi'))
+    ||voices.find(x=>x.lang.startsWith('en'));
   if(v)u.voice=v;
   u.onend=()=>{speaking=false;};
   u.onerror=()=>{speaking=false;};
