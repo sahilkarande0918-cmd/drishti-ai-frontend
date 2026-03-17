@@ -155,6 +155,12 @@ footer{position:relative;z-index:1;text-align:center;padding:2.4rem 3rem;border-
 @keyframes wv{0%,100%{height:3px}50%{height:16px}}
 
 @media(max-width:900px){
+  .arch-flow{justify-content:flex-start;padding-left:.5rem;padding-right:2rem}
+  .arch-flow::-webkit-scrollbar{height:4px}
+  .arch-flow::-webkit-scrollbar-track{background:var(--bg3);border-radius:4px}
+  .arch-flow::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+  .arch-step{scroll-snap-align:start;flex-shrink:0}
+  .arch-arrow{flex-shrink:0}
   nav{padding:.9rem 1.4rem}
   .nlinks{display:none}
   #features,#demo{padding:5rem 1.4rem}
